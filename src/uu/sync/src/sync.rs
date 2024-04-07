@@ -71,7 +71,7 @@ mod platform {
     use std::fs::OpenOptions;
     use std::os::windows::prelude::*;
     use std::path::Path;
-    use uucore::crash;
+    use uucore::error::USimpleError;
     use uucore::wide::{FromWide, ToWide};
     use windows_sys::Win32::Foundation::{
         GetLastError, ERROR_NO_MORE_FILES, HANDLE, INVALID_HANDLE_VALUE, MAX_PATH,
@@ -88,13 +88,15 @@ mod platform {
             match OpenOptions::new().write(true).open(sliced_name) {
                 Ok(file) => {
                     if FlushFileBuffers(file.as_raw_handle() as HANDLE) == 0 {
-                        crash!(GetLastError() as i32, "failed to flush file buffer");
+                        show!(USimpleError::new(
+                            GetLastError() as i32,
+                            "failed to flush file buffer"));
                     }
                 }
-                Err(e) => crash!(
+                Err(e) => show!(USimpleError::new(
                     e.raw_os_error().unwrap_or(1),
                     "failed to create volume handle"
-                ),
+                )),
             }
         }
     }
